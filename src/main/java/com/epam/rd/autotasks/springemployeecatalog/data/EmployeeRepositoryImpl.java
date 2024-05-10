@@ -16,7 +16,9 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -67,6 +69,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
         @Override
         public Employee mapRow(ResultSet resultSet, int i) throws SQLException {
+            Map<Long, Employee> employees = new HashMap<>();
+            Map<Long, Long> employeeToManagerMap = new HashMap<>();
             Long id = resultSet.getLong("ID");
             String firstName = resultSet.getString("FIRSTNAME");
             String lastName = resultSet.getString("LASTNAME");
@@ -79,7 +83,28 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
             Employee manager = null;
             Long departmentId = resultSet.getLong("DEPARTMENT");
             Department department = (departmentId != 0) ? new Department(departmentId, null, null) : null;
-            return new Employee(id, fullName, position, hired, salary, manager, department);
+            if (managerId != 0) {
+                employeeToManagerMap.put(id, managerId);
+            }
+            Employee employee = new Employee(id, fullName, position, hired, salary, null, department);
+            employees.put(id, employee);
+            employeeToManagerMap.forEach((key, value) -> {
+                employees.put(key, findManager(key, employees, employeeToManagerMap));
+            });
+            return employee;
+        }
+
+        private Employee findManager(Long id, Map<Long, Employee> employees, Map<Long, Long> employeeToManagerMap) {
+            Employee employee = employees.get(id);
+            Employee manager = employees.get(employeeToManagerMap.get(id));
+            Employee employeeWithManager;
+            if (manager != null) {
+                employeeWithManager = new Employee(employee.getId(), employee.getFullName(), employee.getPosition(), employee.getHired(), employee.getSalary(),
+                        findManager(manager.getId(), employees, employeeToManagerMap), employee.getDepartment());
+            } else {
+                employeeWithManager = employee;
+            }
+            return employeeWithManager;
         }
     }
 }
