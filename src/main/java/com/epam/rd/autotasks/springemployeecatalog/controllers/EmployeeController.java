@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/employee")
+@RequestMapping("/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
 
@@ -18,32 +18,32 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
-    @GetMapping("/employees")
+    @GetMapping
     public Page<Employee> getAllEmployees(@RequestParam(defaultValue = "0") int page,
-                                          @RequestParam(defaultValue = "10") int size,
-                                          @RequestParam(defaultValue = "lastName") String sort) {
+                                          @RequestParam int size,
+                                          @RequestParam String sort) {
         return employeeService.getAllEmployees(page, size, sort);
     }
 
-    @GetMapping("/employees/{employee_id}")
+    @GetMapping("/{employee_id}")
     public Optional<Employee> getEmployeeById(@PathVariable("employee_id") Long employeeId,
                                               @RequestParam(defaultValue = "false") boolean full_chain) {
         return employeeService.getEmployeeById(employeeId, full_chain);
     }
 
-    @GetMapping("/employees/by_manager/{managerId}")
+    @GetMapping("/by_manager/{managerId}")
     public Page<Employee> getEmployeeByManager(@PathVariable("managerId") Long managerId,
                                                @RequestParam(defaultValue = "0") int page,
-                                               @RequestParam(defaultValue = "10") int size,
-                                               @RequestParam(defaultValue = "lastName") String sort) {
+                                               @RequestParam int size,
+                                               @RequestParam String sort) {
         return employeeService.getEmployeeByManager(managerId, page, size, sort);
     }
 
-    @GetMapping("/employees/by_department/{departmentId or departmentName}")
+    @GetMapping("/by_department/{departmentId}")
     public Page<Employee> getEmployeeByDepartment(@PathVariable("departmentId") Long departmentId,
                                                   @RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "10") int size,
-                                                  @RequestParam(defaultValue = "lastName") String sort) {
+                                                  @RequestParam int size,
+                                                  @RequestParam String sort) {
         return employeeService.getEmployeeByDepartment(departmentId, page, size, sort);
     }
 }
