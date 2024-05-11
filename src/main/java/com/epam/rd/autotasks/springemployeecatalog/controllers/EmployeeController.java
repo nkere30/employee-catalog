@@ -3,9 +3,9 @@ package com.epam.rd.autotasks.springemployeecatalog.controllers;
 import com.epam.rd.autotasks.springemployeecatalog.domain.Employee;
 import com.epam.rd.autotasks.springemployeecatalog.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -19,7 +19,7 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public Page<Employee> getAllEmployees(@RequestParam(defaultValue = "0") int page,
+    public List<Employee> getAllEmployees(@RequestParam(defaultValue = "0") int page,
                                           @RequestParam int size,
                                           @RequestParam String sort) {
         return employeeService.getAllEmployees(page, size, sort);
@@ -32,7 +32,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/by_manager/{managerId}")
-    public Page<Employee> getEmployeeByManager(@PathVariable("managerId") Long managerId,
+    public List<Employee> getEmployeeByManager(@PathVariable("managerId") Long managerId,
                                                @RequestParam(defaultValue = "0") int page,
                                                @RequestParam int size,
                                                @RequestParam String sort) {
@@ -40,7 +40,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/by_department/{departmentId}")
-    public Page<Employee> getEmployeeByDepartment(@PathVariable("departmentId") Long departmentId,
+    public List<Employee> getEmployeeByDepartment(@PathVariable("departmentId") Long departmentId,
                                                   @RequestParam(defaultValue = "0") int page,
                                                   @RequestParam int size,
                                                   @RequestParam String sort) {

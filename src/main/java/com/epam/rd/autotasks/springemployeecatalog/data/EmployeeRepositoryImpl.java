@@ -5,9 +5,6 @@ import com.epam.rd.autotasks.springemployeecatalog.domain.Employee;
 import com.epam.rd.autotasks.springemployeecatalog.domain.FullName;
 import com.epam.rd.autotasks.springemployeecatalog.domain.Position;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -16,7 +13,9 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class EmployeeRepositoryImpl implements EmployeeRepository{
@@ -29,10 +28,10 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     }
 
     @Override
-    public Page<Employee> findAll(int page, int size, String sort) {
+    public List<Employee> findAll(int page, int size, String sort) {
         String query = "SELECT * FROM EMPLOYEE ORDER BY " + sort;
         List<Employee> employees = jdbcTemplate.query(query, new EmployeeRowMapper(jdbcTemplate));
-        return getPage(employees, page, size);
+        return getList(employees, page, size);
     }
 
 
@@ -46,24 +45,23 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
 
     @Override
-    public Page<Employee> findEmployeesByManager(Long managerId, int page, int size, String sort) {
+    public List<Employee> findEmployeesByManager(Long managerId, int page, int size, String sort) {
         String query = "SELECT * FROM EMPLOYEE WHERE MANAGER = ? ORDER BY " + sort;
         List<Employee> employees = jdbcTemplate.query(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate));
-        return getPage(employees, page, size);
+        return getList(employees, page, size);
     }
 
 
     @Override
-    public Page<Employee> findEmployeesByDepartmentId(Long departmentId, int page, int size, String sort) {
+    public List<Employee> findEmployeesByDepartmentId(Long departmentId, int page, int size, String sort) {
         String query = "SELECT * FROM EMPLOYEE WHERE DEPARTMENT = ? ORDER BY " + sort;
         List<Employee> employees = jdbcTemplate.query(query, new Object[]{departmentId}, new EmployeeRowMapper(jdbcTemplate));
-        return getPage(employees, page, size);
+        return getList(employees, page, size);
     }
-    private Page<Employee> getPage(List<Employee> employees, int page, int size) {
+    private List<Employee> getList(List<Employee> employees, int page, int size) {
         int startIndex = page * size;
         int endIndex = Math.min(startIndex + size, employees.size());
-        List<Employee> employeeSubList = employees.subList(startIndex, endIndex);
-        return new PageImpl<>(employeeSubList, PageRequest.of(page, size), employees.size());
+        return employees.subList(startIndex, endIndex);
     }
 
     private static class EmployeeRowMapper implements RowMapper<Employee> {
