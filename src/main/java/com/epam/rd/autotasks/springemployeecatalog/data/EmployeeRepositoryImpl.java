@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -29,8 +30,9 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
     @Override
     public List<Employee> findAll(int page, int size, String sort) {
+        if(sort.equals("HIRED")|| sort.equals("hired")) sort += "ATE";
         String query = "SELECT * FROM EMPLOYEE ORDER BY " + sort;
-        List<Employee> employees = jdbcTemplate.query(query, new EmployeeRowMapper(jdbcTemplate));
+        List<Employee> employees = jdbcTemplate.query(query, new EmployeeRowMapper(jdbcTemplate, false));
         return getList(employees, page, size);
     }
 
@@ -39,23 +41,25 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     @Override
     public Optional<Employee> findById(Long id, boolean fullChain) {
         String query = "SELECT * FROM EMPLOYEE WHERE ID = ?";
-        Employee employee = jdbcTemplate.queryForObject(query, new Object[]{id}, new EmployeeRowMapper(jdbcTemplate));
+        Employee employee = jdbcTemplate.queryForObject(query, new Object[]{id}, new EmployeeRowMapper(jdbcTemplate, fullChain));
         return Optional.ofNullable(employee);
     }
 
 
     @Override
     public List<Employee> findEmployeesByManager(Long managerId, int page, int size, String sort) {
+        if(sort.equals("HIRED")|| sort.equals("hired")) sort += "ATE";
         String query = "SELECT * FROM EMPLOYEE WHERE MANAGER = ? ORDER BY " + sort;
-        List<Employee> employees = jdbcTemplate.query(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate));
+        List<Employee> employees = jdbcTemplate.query(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate, false));
         return getList(employees, page, size);
     }
 
 
     @Override
     public List<Employee> findEmployeesByDepartmentId(Long departmentId, int page, int size, String sort) {
+        if(sort.equals("HIRED")|| sort.equals("hired")) sort += "ATE";
         String query = "SELECT * FROM EMPLOYEE WHERE DEPARTMENT = ? ORDER BY " + sort;
-        List<Employee> employees = jdbcTemplate.query(query, new Object[]{departmentId}, new EmployeeRowMapper(jdbcTemplate));
+        List<Employee> employees = jdbcTemplate.query(query, new Object[]{departmentId}, new EmployeeRowMapper(jdbcTemplate, false));
         return getList(employees, page, size);
     }
     private List<Employee> getList(List<Employee> employees, int page, int size) {
@@ -66,9 +70,11 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
     private static class EmployeeRowMapper implements RowMapper<Employee> {
         private final JdbcTemplate jdbcTemplate;
+        private final boolean fullChain;
 
-        private EmployeeRowMapper(JdbcTemplate jdbcTemplate) {
+        private EmployeeRowMapper(JdbcTemplate jdbcTemplate, boolean fullChain) {
             this.jdbcTemplate = jdbcTemplate;
+            this.fullChain = fullChain;
         }
 
         private static List<Long> employeeManager = new ArrayList<>();
@@ -85,13 +91,34 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
             BigDecimal salary = BigDecimal.valueOf(resultSet.getDouble("SALARY"));
             Long managerId = resultSet.getLong("MANAGER");
             Employee manager = null;
-            if (employeeManager.isEmpty()) {
-                manager = findEmployee(managerId);
+            if (fullChain) {
+                manager = findFullManagerChain(managerId).get(0);
+            } else {
+                manager = findImmediateManager(managerId);
             }
             Long departmentId = resultSet.getLong("DEPARTMENT");
             Department department = findDepartment(departmentId);
-            Employee employee = new Employee(id, fullName, position, hired, salary, manager, department);
-            return employee;
+            return new Employee(id, fullName, position, hired, salary, manager, department);
+        }
+
+        private Employee findImmediateManager(Long managerId) {
+            if (managerId == 0) return null;
+            String query = "SELECT * FROM EMPLOYEE WHERE ID = ?";
+            return jdbcTemplate.queryForObject(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate, false));
+        }
+
+        private List<Employee> findFullManagerChain(Long managerId) {
+            List<Employee> managerChain = new ArrayList<>();
+            while (managerId != 0) {
+                Employee manager = findImmediateManager(managerId);
+                if (manager != null) {
+                    managerChain.add(manager);
+                    managerId = manager.getManager().getId();
+                } else {
+                    break;
+                }
+            }
+            return managerChain;
         }
 
         private Department findDepartment(Long departmentId) {
@@ -100,12 +127,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
             return jdbcTemplate.queryForObject(query, new Object[]{departmentId}, new DepartmentRowMapper());
         }
 
-        private Employee findEmployee(Long managerId) {
-            if (managerId == 0) return null;
-            employeeManager.add(managerId);
-            String query = "SELECT * FROM EMPLOYEE WHERE ID = ?";
-            return jdbcTemplate.queryForObject(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate));
-        }
 
         private static class DepartmentRowMapper implements RowMapper<Department> {
 
