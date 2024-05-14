@@ -77,8 +77,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
             this.fullChain = fullChain;
         }
 
-        private static List<Long> employeeManager = new ArrayList<>();
-
         @Override
         public Employee mapRow(ResultSet resultSet, int i) throws SQLException {
             Long id = resultSet.getLong("ID");
