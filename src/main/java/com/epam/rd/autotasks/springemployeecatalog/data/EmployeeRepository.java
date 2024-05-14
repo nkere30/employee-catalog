@@ -15,4 +15,6 @@ public interface EmployeeRepository{
     List<Employee> findEmployeesByManager(Long managerId, int page, int size, String sort);
 
     List<Employee> findEmployeesByDepartmentId(Long departmentId, int page, int size, String sort);
+
+    Long findDepartmentIdByName(String departmentName);
 }

@@ -31,4 +31,8 @@ public class EmployeeService {
     public List<Employee> getEmployeeByDepartment(Long departmentId, int page, int size, String sort) {
         return employeeRepository.findEmployeesByDepartmentId(departmentId, page, size, sort);
     }
+
+    public Long getDepartmentIdByName(String departmentName) {
+        return employeeRepository.findDepartmentIdByName(departmentName);
+    }
 }

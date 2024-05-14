@@ -5,6 +5,7 @@ import com.epam.rd.autotasks.springemployeecatalog.domain.Employee;
 import com.epam.rd.autotasks.springemployeecatalog.domain.FullName;
 import com.epam.rd.autotasks.springemployeecatalog.domain.Position;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -15,7 +16,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -62,6 +62,17 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
         List<Employee> employees = jdbcTemplate.query(query, new Object[]{departmentId}, new EmployeeRowMapper(jdbcTemplate, false));
         return getList(employees, page, size);
     }
+
+    @Override
+    public Long findDepartmentIdByName(String departmentName) {
+        String query = "SELECT ID FROM DEPARTMENT WHERE NAME = ?";
+        try {
+            return jdbcTemplate.queryForObject(query, new Object[]{departmentName}, Long.class);
+        } catch (EmptyResultDataAccessException e) {
+            throw new IllegalArgumentException();
+        }
+    }
+
     private List<Employee> getList(List<Employee> employees, int page, int size) {
         int startIndex = page * size;
         int endIndex = Math.min(startIndex + size, employees.size());

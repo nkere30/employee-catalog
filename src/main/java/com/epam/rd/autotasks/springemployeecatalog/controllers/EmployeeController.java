@@ -40,10 +40,17 @@ public class EmployeeController {
     }
 
     @GetMapping("/by_department/{departmentId}")
-    public List<Employee> getEmployeeByDepartment(@PathVariable("departmentId") Long departmentId,
+    public List<Employee> getEmployeeByDepartment(@PathVariable("departmentId") String departmentIdentifier,
                                                   @RequestParam(defaultValue = "0") int page,
                                                   @RequestParam int size,
                                                   @RequestParam String sort) {
+        Long departmentId;
+        try {
+            departmentId = Long.parseLong(departmentIdentifier);
+        } catch (NumberFormatException e) {
+            departmentId = employeeService.getDepartmentIdByName(departmentIdentifier);
+        }
         return employeeService.getEmployeeByDepartment(departmentId, page, size, sort);
     }
 }
+
