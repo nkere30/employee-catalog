@@ -69,7 +69,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
         try {
             return jdbcTemplate.queryForObject(query, new Object[]{departmentName}, Long.class);
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Department with name '" + departmentName + "' not found");
         }
     }
 
@@ -99,35 +99,27 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
             LocalDate hired = resultSet.getDate("HIREDATE").toLocalDate();
             BigDecimal salary = BigDecimal.valueOf(resultSet.getDouble("SALARY"));
             Long managerId = resultSet.getLong("MANAGER");
+            Long departmentId = resultSet.getLong("DEPARTMENT");
+            Department department = findDepartment(departmentId);
             Employee manager = null;
             if (fullChain) {
-                manager = findFullManagerChain(managerId).get(0);
+                manager = findFullManagerChain(managerId);
             } else {
                 manager = findImmediateManager(managerId);
             }
-            Long departmentId = resultSet.getLong("DEPARTMENT");
-            Department department = findDepartment(departmentId);
             return new Employee(id, fullName, position, hired, salary, manager, department);
         }
 
         private Employee findImmediateManager(Long managerId) {
             if (managerId == 0) return null;
             String query = "SELECT * FROM EMPLOYEE WHERE ID = ?";
-            return jdbcTemplate.queryForObject(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate, false));
+            return (Employee) jdbcTemplate.queryForObject(query, new Object[]{managerId}, new EmployeeWithNoManagerRowMapper(jdbcTemplate, false));
         }
 
-        private List<Employee> findFullManagerChain(Long managerId) {
-            List<Employee> managerChain = new ArrayList<>();
-            while (managerId != 0) {
-                Employee manager = findImmediateManager(managerId);
-                if (manager != null) {
-                    managerChain.add(manager);
-                    managerId = manager.getManager().getId();
-                } else {
-                    break;
-                }
-            }
-            return managerChain;
+        private Employee findFullManagerChain(Long managerId) {
+
+            String query = "SELECT * FROM EMPLOYEE WHERE ID = ?";
+            return (Employee) jdbcTemplate.queryForObject(query, new Object[]{managerId}, new EmployeeRowMapper(jdbcTemplate, true));
         }
 
         private Department findDepartment(Long departmentId) {
@@ -148,5 +140,26 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
             }
         }
 
+        private class EmployeeWithNoManagerRowMapper implements RowMapper{
+            public EmployeeWithNoManagerRowMapper(JdbcTemplate jdbcTemplate, boolean b) {
+            }
+
+            @Override
+            public Object mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+                Long id = resultSet.getLong("ID");
+                String firstName = resultSet.getString("FIRSTNAME");
+                String lastName = resultSet.getString("LASTNAME");
+                String middleName = resultSet.getString("MIDDLENAME");
+                FullName fullName = new FullName(firstName, lastName, middleName);
+                Position position = Position.valueOf(resultSet.getString("POSITION"));
+                LocalDate hired = resultSet.getDate("HIREDATE").toLocalDate();
+                BigDecimal salary = BigDecimal.valueOf(resultSet.getDouble("SALARY"));
+                Long managerId = resultSet.getLong("MANAGER");
+                Long departmentId = resultSet.getLong("DEPARTMENT");
+                Department department = findDepartment(departmentId);
+                Employee manager = null;
+                return new Employee(id, fullName, position, hired, salary, manager, department);
+            }
+        }
     }
 }
