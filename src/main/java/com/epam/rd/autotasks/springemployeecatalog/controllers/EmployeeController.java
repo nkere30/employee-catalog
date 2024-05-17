@@ -19,9 +19,9 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public List<Employee> getAllEmployees(@RequestParam(defaultValue = "0") int page,
-                                          @RequestParam int size,
-                                          @RequestParam String sort) {
+    public List<Employee> getAllEmployees(@RequestParam(required = false) Integer page,
+                                          @RequestParam(required = false) Integer size,
+                                          @RequestParam(required = false) String sort) {
         return employeeService.getAllEmployees(page, size, sort);
     }
 
@@ -33,17 +33,17 @@ public class EmployeeController {
 
     @GetMapping("/by_manager/{managerId}")
     public List<Employee> getEmployeeByManager(@PathVariable("managerId") Long managerId,
-                                               @RequestParam(defaultValue = "0") int page,
-                                               @RequestParam int size,
-                                               @RequestParam String sort) {
+                                               @RequestParam(required = false) Integer page,
+                                               @RequestParam(required = false) Integer size,
+                                               @RequestParam(required = false) String sort) {
         return employeeService.getEmployeeByManager(managerId, page, size, sort);
     }
 
     @GetMapping("/by_department/{departmentId}")
     public List<Employee> getEmployeeByDepartment(@PathVariable("departmentId") String departmentIdentifier,
-                                                  @RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam int size,
-                                                  @RequestParam String sort) {
+                                                  @RequestParam(required = false) Integer page,
+                                                  @RequestParam(required = false) Integer size,
+                                                  @RequestParam(required = false) String sort) {
         Long departmentId;
         try {
             departmentId = Long.parseLong(departmentIdentifier);

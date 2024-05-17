@@ -8,13 +8,13 @@ import java.util.Optional;
 
 @Repository
 public interface EmployeeRepository{
-    List<Employee> findAll(int page, int size, String sort);
+    List<Employee> findAll(Integer page, Integer size, String sort);
 
     Optional<Employee> findById(Long id, boolean fullChain);
 
-    List<Employee> findEmployeesByManager(Long managerId, int page, int size, String sort);
+    List<Employee> findEmployeesByManager(Long managerId, Integer page, Integer size, String sort);
 
-    List<Employee> findEmployeesByDepartmentId(Long departmentId, int page, int size, String sort);
+    List<Employee> findEmployeesByDepartmentId(Long departmentId, Integer page, Integer size, String sort);
 
     Long findDepartmentIdByName(String departmentName);
 }

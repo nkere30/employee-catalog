@@ -17,18 +17,18 @@ public class EmployeeService {
         this.employeeRepository = employeeRepository;
     }
 
-    public List<Employee> getAllEmployees(int page, int size, String sort) {
+    public List<Employee> getAllEmployees(Integer page, Integer size, String sort) {
         return employeeRepository.findAll(page, size, sort);
     }
 
     public Optional<Employee> getEmployeeById(Long employeeId, boolean fullChain) {
         return employeeRepository.findById(employeeId, fullChain);
     }
-    public List<Employee> getEmployeeByManager(Long managerId, int page, int size, String sort) {
+    public List<Employee> getEmployeeByManager(Long managerId, Integer page, Integer size, String sort) {
         return employeeRepository.findEmployeesByManager(managerId, page, size, sort);
     }
 
-    public List<Employee> getEmployeeByDepartment(Long departmentId, int page, int size, String sort) {
+    public List<Employee> getEmployeeByDepartment(Long departmentId, Integer page, Integer size, String sort) {
         return employeeRepository.findEmployeesByDepartmentId(departmentId, page, size, sort);
     }
 
